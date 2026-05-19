@@ -1,0 +1,26 @@
+# Secrets & credentials — ห้าม push เด็ดขาด
+.env
+config/client_secret.json
+config/youtube_token.pickle
+config/tiktok_token.json
+
+# Generated output
+output/
+logs/
+
+# Pexels video cache (large binary files)
+input/pexels_cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# macOS
+.DS_Store
+
+# Temp
+tmp/
+*.tmp

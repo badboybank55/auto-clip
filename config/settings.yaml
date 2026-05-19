@@ -1,0 +1,65 @@
+script:
+  model: claude-sonnet-4-6
+  language: thai
+  max_tokens: 4096
+  style: engaging
+  duration_target: 45
+
+tts:
+  engine: elevenlabs     # gtts | elevenlabs
+  language: th
+  slow: false
+  pause_between: 0.1
+  voice_id: ""           # ว่าง = auto-detect จาก "ครับ"/"ค่ะ"
+
+video:
+  resolution: "1080x1920"
+  fps: 30
+  background_color: "#0d0d1a"
+  font_size: 52
+
+subtitle:
+  max_chars_per_line: 16
+  color: "#FFFFFF"
+  stroke_color: "#000000"
+  stroke_width: 18
+  position_pct: 0.65
+  backdrop_opacity: 0.25
+
+audio:
+  bg_music_enabled: true
+  bg_music_mood: upbeat
+  bg_music_volume: 0.28         # 28% ของเสียงพาก (target -24 LUFS เมื่อ voice -18.7 LUFS)
+
+pexels:
+  enabled: true
+  quality: 4k
+  orientation: portrait
+
+export:
+  format: mp4
+  video_codec: h264_videotoolbox   # GPU encoding (Apple Silicon) — fallback libx264
+  audio_codec: aac
+  crf: 18
+
+social_media:
+  youtube:
+    enabled: true           # true เมื่อมี config/client_secret.json
+    category_id: "22"       # 22 = People & Blogs
+    privacy: public
+  tiktok:
+    enabled: false          # true เมื่อ TIKTOK_CLIENT_KEY + TIKTOK_CLIENT_SECRET ใน .env
+    privacy: PUBLIC_TO_EVERYONE   # PUBLIC_TO_EVERYONE | MUTUAL_FOLLOW_FRIENDS | SELF_ONLY
+    disable_comment: false
+    disable_duet: false
+    disable_stitch: false
+  facebook:
+    enabled: true
+    page_id: "118604523332820"
+  instagram:
+    enabled: true
+    cross_post_from_facebook: true   # ดึง CDN URL จาก FB video แล้วโพส IG
+
+logging:
+  level: INFO
+  file: logs/auto-clip.log
