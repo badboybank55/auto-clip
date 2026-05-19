@@ -306,6 +306,12 @@ class TopicManager:
             if not pending:
                 raise RuntimeError("ไม่สามารถ generate topic ได้ — ตรวจ API key หรือลองใหม่")
             pending = self._interleave_by_category(pending)
+            # แจ้ง Telegram พร้อมรายชื่อ 5 หัวข้อแรก
+            try:
+                from .notifier import notify_topics_generated
+                notify_topics_generated(pending)
+            except Exception:
+                pass
 
         # ── เช็ค 10 clip ล่าสุด ห้ามซ้ำ category ──────────────────────
         recent_cats = set()

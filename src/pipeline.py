@@ -280,10 +280,10 @@ def _write_all_captions(run_dir: Path, title: str, platform_caps: dict):
     cap_dir.mkdir(parents=True, exist_ok=True)
 
     _FALLBACK = {
-        "tiktok":    {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#fyp","#foryoupage","#tiktokthailand","#moneytips","#personalfinance","#viral"]},
-        "instagram": {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#เก็บเงิน","#ลงทุน","#เงิน","#moneytips","#personalfinance","#financetips","#fyp","#foryoupage","#reels","#viral"]},
-        "facebook":  {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#เก็บเงิน"]},
-        "youtube":   {"title": title, "description": title, "tags": ["การเงิน","ออมเงิน","money tips","personal finance"]},
+        "tiktok":    {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#fyp","#เงินงอก","#moneytips"]},
+        "instagram": {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#ลงทุน","#เงินงอก","#reels"]},
+        "facebook":  {"caption": title, "hashtags": ["#การเงิน","#ออมเงิน","#เงินงอก","#moneytips","#personalfinance"]},
+        "youtube":   {"title": title, "description": title, "tags": ["การเงิน","ออมเงิน","เงินงอก","money tips","personal finance"]},
     }
 
     sections = []

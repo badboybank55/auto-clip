@@ -1,0 +1,16 @@
+# เงินงอก Auto-Clip Schedule (เวลาไทย)
+# ────────────────────────────────────────
+# 05:50 — Generate pipeline (ใช้เวลา ~2 ชั่วโมง)
+50 5 * * * /Users/badboybank/auto-clip/scripts/run_pipeline.sh
+
+# 08:00 — Slot 0: YouTube Long + Short#1 + IG#1 + FB#1
+0 8 * * * /Users/badboybank/auto-clip/scripts/post_slot.sh 0
+
+# 11:30 — Slot 1: Short#2 + IG#2 + FB#2
+30 11 * * * /Users/badboybank/auto-clip/scripts/post_slot.sh 1
+
+# 16:30 — Slot 2: Short#3 + IG#3 + FB#3
+30 16 * * * /Users/badboybank/auto-clip/scripts/post_slot.sh 2
+
+# 19:00 — Slot 3: Short#4 + IG#4 + FB#4
+0 19 * * * /Users/badboybank/auto-clip/scripts/post_slot.sh 3

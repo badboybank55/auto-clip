@@ -39,6 +39,8 @@ def parse_args():
                    help="อัปโหลดโซเชียลมีเดียอัตโนมัติหลัง export")
     p.add_argument("--preview", "-p", action="store_true",
                    help="แสดงสคริปต์และรอ confirm ก่อนสร้างวิดีโอ")
+    p.add_argument("--long", "-l", action="store_true",
+                   help="สร้างคลิปยาว 16:9 (8-10 นาที) + short 9:16 × 3-5 อัน")
     p.add_argument("--config", "-c", default="config/settings.yaml",
                    help="path ของไฟล์ตั้งค่า")
     return p.parse_args()
@@ -106,6 +108,29 @@ def main():
     config = load_config(args.config)
     setup_logger(config)
     check_env()
+
+    # ── Long-form mode ────────────────────────────────────────────────────────
+    if args.long:
+        from src.long_pipeline import LongFormPipeline
+        topic = args.topic
+        if not topic and args.auto:
+            from src.topic_manager import TopicManager
+            topic = TopicManager().get_next_topic()
+        if not topic:
+            logger.error("ต้องระบุ --topic หรือใช้ --long --auto")
+            sys.exit(1)
+        logger.info(f"Long-form mode: {topic}")
+        lp = LongFormPipeline(config)
+        result = lp.run(topic)
+        print(f"\n{'─'*52}")
+        print(f"  Long video : {result['long_video']}")
+        print(f"  Shorts     : {len(result['shorts'])} อัน (teaser + fb_complete)")
+        for i, s in enumerate(result['shorts'], 1):
+            print(f"    {i}. {s['section_title']}")
+        print(f"{'─'*52}\n")
+        import subprocess
+        subprocess.Popen(["open", result["long_video"]])
+        sys.exit(0)
 
     # ── Series mode: generate topic queue จาก main topic แล้วรัน --auto ──────
     if args.series:

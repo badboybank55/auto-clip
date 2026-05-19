@@ -273,7 +273,8 @@ class VideoBuilder:
         video.fl(_draw, apply_to=["video"]).write_videofile(
             output_path, fps=self.fps, codec=self.vcodec,
             audio_codec=self.acodec,
-            ffmpeg_params=["-crf", str(self.crf), "-movflags", "+faststart"],
+            ffmpeg_params=["-crf", str(self.crf), "-movflags", "+faststart",
+                           "-ar", "48000"],
             logger=None,
         )
 

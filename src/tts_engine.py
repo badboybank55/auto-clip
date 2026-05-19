@@ -421,9 +421,45 @@ class TTSEngine:
                     return [sentence[:pos].strip(), sentence[pos+1:].strip()]
         return [sentence]  # ตัดไม่ได้ → ส่งทั้งประโยค
 
+    # ─── ElevenLabs safety filter ────────────────────────────────────────────
+    _RISKY_PATTERNS = [
+        # direct investment commands
+        r"ซื้อ\s*(หุ้น|กองทุน|คริปโต|บิตคอย)",
+        r"ลงทุนใน\w+ทันที",
+        r"คุณควร(ซื้อ|ขาย|ลงทุน)",
+        r"แนะนำให้(ซื้อ|ขาย|โอน|ลงทุน)",
+        r"รับประกัน(ผลตอบแทน|กำไร|รายได้)",
+        r"(ผลตอบแทน|กำไร).{0,10}(แน่นอน|รับประกัน|การันตี)",
+    ]
+
+    @staticmethod
+    def _educational_disclaimer() -> str:
+        return "เนื้อหานี้เป็นข้อมูลเพื่อการศึกษาเท่านั้น ไม่ใช่คำแนะนำทางการเงิน"
+
+    def _safe_sentences(self, sentences: list) -> list:
+        """ตรวจ + softens ประโยคที่อาจ trigger ElevenLabs content policy"""
+        import re
+        safe = []
+        for s in sentences:
+            flagged = any(re.search(p, s) for p in self._RISKY_PATTERNS)
+            if flagged:
+                logger.warning(f"TTS safety: softened → {s[:50]}")
+                s = re.sub(r"คุณควร(ซื้อ|ขาย|ลงทุน)", r"ผู้เชี่ยวชาญมองว่าการ\1", s)
+                s = re.sub(r"แนะนำให้(ซื้อ|ขาย|โอน|ลงทุน)", r"ข้อมูลที่ควรรู้คือการ\1", s)
+                s = re.sub(r"รับประกัน(ผลตอบแทน|กำไร|รายได้)", r"มีโอกาสได้\1", s)
+            safe.append(s)
+        # ต่อท้ายด้วย disclaimer ถ้ายังไม่มี
+        disclaimer = self._educational_disclaimer()
+        if safe and disclaimer not in safe[-1]:
+            safe.append(disclaimer)
+        return safe
+
     def synthesize_all(self, sentences: list, audio_dir: str) -> list:
         audio_dir = Path(audio_dir)
         audio_dir.mkdir(parents=True, exist_ok=True)
+
+        # Safety filter ก่อน TTS
+        sentences = self._safe_sentences(sentences)
 
         # แยกประโยคยาว > 80 chars ก่อน TTS
         expanded = []

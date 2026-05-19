@@ -102,50 +102,22 @@ class FacebookUploader:
                cross_post_instagram: bool = False) -> str:
         video_path = Path(video_path)
         file_size  = video_path.stat().st_size
-        reels_url  = f"{self.GRAPH_URL}/{self.API_VERSION}/{self.page_id}/video_reels"
+        url = f"{self.GRAPH_URL}/{self.API_VERSION}/{self.page_id}/videos"
 
-        # Phase 1: start — get upload_url + video_id
-        r = requests.post(reels_url,
-            params={"upload_phase": "start", "access_token": self.token},
-            timeout=30)
-        r.raise_for_status()
-        data       = r.json()
-        video_id   = data.get("video_id", "")
-        upload_url = data.get("upload_url", "")
-        if not video_id or not upload_url:
-            raise RuntimeError(f"Facebook Reels init failed: {r.text}")
-
-        logger.info(f"Facebook: uploading {file_size/1024/1024:.1f}MB → video_id={video_id}")
-
-        # Phase 2: transfer — binary upload
+        logger.info(f"Facebook: uploading {file_size/1024/1024:.1f}MB...")
         with open(video_path, "rb") as fh:
-            put_r = requests.post(
-                upload_url,
-                data=fh,
-                headers={
-                    "Authorization": f"OAuth {self.token}",
-                    "Content-Type":  "video/mp4",
-                    "offset":        "0",
-                    "file_size":     str(file_size),
+            resp = requests.post(url,
+                data={
+                    "title":        title[:255],
+                    "description":  description,
+                    "access_token": self.token,
                 },
+                files={"source": fh},
                 timeout=600,
             )
-        put_r.raise_for_status()
-        logger.info("Facebook: transfer done, publishing...")
-
-        # Phase 3: finish + publish
-        finish_params = {
-            "upload_phase":  "finish",
-            "video_state":   "PUBLISHED",
-            "video_id":      video_id,
-            "title":         title[:255],
-            "description":   description,
-            "access_token":  self.token,
-        }
-        fin_r = requests.post(reels_url, params=finish_params, timeout=60)
-        fin_r.raise_for_status()
-
-        logger.success(f"Facebook Reels → video_id={video_id}")
+        resp.raise_for_status()
+        video_id = resp.json().get("id", "")
+        logger.success(f"Facebook → video_id={video_id}")
         return video_id
 
     def get_video_source(self, video_id: str) -> str:
@@ -201,14 +173,15 @@ class InstagramUploader:
             time.sleep(10)
             status_r = requests.get(
                 f"{self.GRAPH_URL}/{container_id}",
-                params={"fields": "status_code", "access_token": self.token},
+                params={"fields": "status_code,status", "access_token": self.token},
                 timeout=30,
             )
-            status = status_r.json().get("status_code", "")
+            status_data = status_r.json()
+            status = status_data.get("status_code", "")
             if status == "FINISHED":
                 break
             if status == "ERROR":
-                logger.error("Instagram: video processing error")
+                logger.error(f"Instagram: video processing error — {status_data}")
                 return ""
 
         # Step 3: Publish

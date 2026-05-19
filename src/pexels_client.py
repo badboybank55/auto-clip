@@ -290,6 +290,7 @@ class PexelsClient:
         n_scenes: int,
         output_dir: str,
         quality: str = "4k",
+        orientation: str = "portrait",
     ) -> list:
         """
         ดาวน์โหลด video pool สำหรับทุกฉาก — dedup by Pexels video ID
@@ -302,9 +303,10 @@ class PexelsClient:
         per_kw = max(5, -(-n_scenes // max(len(keywords), 1)))  # ceiling div
         unique: dict = {}   # id → {url, pexels_url}
 
+        orient_fallbacks = (orientation, "") if orientation else ("",)
         for kw in keywords:
-            for orientation in ("portrait", ""):
-                results = self.search(kw, orientation=orientation,
+            for orient in orient_fallbacks:
+                results = self.search(kw, orientation=orient,
                                       per_page=min(per_kw, 15))
                 for v in results:
                     vid_id = v["id"]
