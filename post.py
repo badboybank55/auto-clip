@@ -546,8 +546,6 @@ def _morning_health_check():
                     )
     except Exception:
         pass
-    except Exception:
-        pass
 
     # 6. Facebook token
     try:
@@ -685,13 +683,21 @@ def _post_section(
         return r and not str(r).startswith("ERROR")
 
     teaser_caps, fb_caps = _load_section_caps(short_dir)
-    teaser = short_dir / "teaser.mp4"
-    fb_vid = short_dir / "fb_complete.mp4"
+    # YouTube Shorts ใช้ teaser_yt.mp4 (CTA: ลิงก์ใน description)
+    # Instagram ใช้ teaser_ig.mp4 (CTA: ลิงก์ใน bio)
+    # fallback: teaser.mp4 สำหรับ output เก่า
+    teaser_yt = short_dir / "teaser_yt.mp4"
+    teaser_ig = short_dir / "teaser_ig.mp4"
+    teaser    = short_dir / "teaser.mp4"  # legacy fallback
+    fb_vid    = short_dir / "fb_complete.mp4"
+
+    yt_video = teaser_yt if teaser_yt.exists() else teaser
+    ig_video = teaser_ig if teaser_ig.exists() else teaser
 
     logger.info(f"── Section {idx+1} ({short_dir.name}) ──────────────────")
 
-    # YouTube Shorts
-    if sm.get("youtube", {}).get("enabled") and teaser.exists():
+    # YouTube Shorts — ใช้ teaser_yt.mp4 (CTA: ลิงก์ใน description)
+    if sm.get("youtube", {}).get("enabled") and yt_video.exists():
         k = f"youtube_shorts_{key}"
         if _already(k):
             logger.info(f"  YT Shorts {key}: ข้าม")
@@ -709,20 +715,20 @@ def _post_section(
                 "tags": long_yt_caps.get("tags", [])[:10] + ["shorts"],
             }}
             try:
-                results[k] = _post_youtube(cfg, teaser, Path("/dev/null"), caps)
+                results[k] = _post_youtube(cfg, yt_video, Path("/dev/null"), caps)
                 logger.success(f"  YT Shorts {key} ✅ {results[k]}")
             except Exception as e:
                 logger.error(f"  YT Shorts {key}: {e}")
                 results[k] = f"ERROR: {e}"
 
-    # Instagram
-    if sm.get("instagram", {}).get("enabled") and teaser.exists():
+    # Instagram — ใช้ teaser_ig.mp4 (CTA: ลิงก์ใน bio)
+    if sm.get("instagram", {}).get("enabled") and ig_video.exists():
         k = f"instagram_{key}"
         if _already(k):
             logger.info(f"  Instagram {key}: ข้าม")
         else:
             try:
-                ig_result = _post_instagram(cfg, teaser, teaser_caps)
+                ig_result = _post_instagram(cfg, ig_video, teaser_caps)
                 results[k] = ig_result if ig_result else "ERROR: empty"
                 logger.success(f"  Instagram {key} ✅ {results[k]}")
                 # auto-comment ลิงก์คลิปยาว

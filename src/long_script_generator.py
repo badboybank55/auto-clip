@@ -154,30 +154,46 @@ def extract_all_sentences(script_data: dict) -> list[str]:
 
 
 def build_short_script(section: dict, style: str = "teaser",
-                        youtube_url: str = "") -> list[str]:
+                        youtube_url: str = "",
+                        platform: str = "youtube") -> list[str]:
     """
     สร้าง sentence list สำหรับ Short จาก section
-    style: "teaser" (โยนไป YouTube) หรือ "complete" (จบในตัว สำหรับ FB)
+    style:    "teaser" (โยนไป YouTube/IG) | "complete" (จบในตัว FB)
+    platform: "youtube" (CTA → ลิงก์ใน description)
+              "instagram" (CTA → ลิงก์ใน bio)
     """
-    hook     = section.get("short_hook", "")
+    hook      = section.get("short_hook", "")
     sentences = section.get("sentences", [])
-    title    = section.get("title", "")
+    title     = section.get("title", "")
 
     result = []
     if hook:
         result.append(hook)
 
     if style == "teaser":
-        # เอา 65% แรก หยุดก่อน payoff — สร้าง suspense
         cutoff = max(3, int(len(sentences) * 0.65))
         result.extend(sentences[:cutoff])
-        # ใช้ cta_teaser จาก AI ถ้ามี มิฉะนั้น fallback
+
         cta = section.get("cta_teaser", "")
-        if not cta:
-            cta = (
-                f"นี่แค่ {title} เดียว ยังมีอีกหลายข้อที่น่ากลัวกว่านี้ "
-                f"— ดูคลิปเต็มได้ที่ YouTube เงินงอก ลิงก์ใน bio"
-            )
+
+        if platform == "instagram":
+            # Instagram: ลิงก์อยู่ใน bio เท่านั้น
+            if cta:
+                cta = cta.replace("ลิงก์ใน description", "ลิงก์ใน bio")
+            else:
+                cta = (
+                    f"นี่แค่ {title} เดียว ยังมีอีกหลายข้อที่น่ากลัวกว่านี้ "
+                    f"— ดูคลิปเต็มได้ที่ YouTube เงินงอก ลิงก์ใน bio"
+                )
+        else:
+            # YouTube Shorts: ลิงก์อยู่ใน description
+            if cta:
+                cta = cta.replace("ลิงก์ใน bio", "ลิงก์ใน description")
+            else:
+                cta = (
+                    f"นี่แค่ {title} เดียว ยังมีอีกหลายข้อที่น่ากลัวกว่านี้ "
+                    f"— ดูคลิปเต็มได้ที่ YouTube เงินงอก ลิงก์ใน description"
+                )
         result.append(cta)
     else:
         # FB complete — จบครบทุก sentence

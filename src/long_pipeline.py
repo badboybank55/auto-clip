@@ -223,46 +223,57 @@ class LongFormPipeline:
 
             logo = str(Path("assets") / "profile.jpg")
 
-            # ── Teaser (TikTok / YT Shorts / IG) ──────────────────────────────
-            teaser_sentences = build_short_script(section, style="teaser")
-            teaser_path      = s_dir / "teaser.mp4"
-            teaser_timing    = _render_video(
-                sentences=teaser_sentences,
+            # ── Teaser YouTube Shorts (CTA: ลิงก์ใน description) ──────────────
+            yt_sentences = build_short_script(section, style="teaser", platform="youtube")
+            yt_path      = s_dir / "teaser_yt.mp4"
+            yt_timing    = _render_video(
+                sentences=yt_sentences,
                 topic=topic,
                 orientation="portrait",
-                output_path=teaser_path,
-                run_dir=s_dir / "teaser_render",
+                output_path=yt_path,
+                run_dir=s_dir / "teaser_yt_render",
                 config=self.config,
                 tts=self.tts,
                 subtitle_gen=self.subtitle_gen,
                 music_path=music_path,
-                label=f"{label}_TEASER",
+                label=f"{label}_YT",
             )
-            hook_end_teaser = teaser_timing[0]["end"] if teaser_timing else 3.0
+            hook_end_yt = yt_timing[0]["end"] if yt_timing else 3.0
+            tmp = str(s_dir / "yt_intro.mp4")
+            add_channel_intro(input_video=str(yt_path), output_video=tmp,
+                              logo_path=logo, appear_at_sec=hook_end_yt)
+            tmp2 = str(s_dir / "yt_lt.mp4")
+            add_lower_third_to_video(input_video=tmp, output_video=tmp2,
+                                     logo_path=logo, is_landscape=False, style="youtube")
+            yt_path.unlink(missing_ok=True)
+            Path(tmp).unlink(missing_ok=True)
+            Path(tmp2).rename(yt_path)
 
-            # Step 1: channel intro (after hook sentence)
-            tmp1 = str(s_dir / "teaser_intro.mp4")
-            add_channel_intro(
-                input_video=str(teaser_path),
-                output_video=tmp1,
-                logo_path=logo,
-                appear_at_sec=hook_end_teaser,
+            # ── Teaser Instagram (CTA: ลิงก์ใน bio) ───────────────────────────
+            ig_sentences = build_short_script(section, style="teaser", platform="instagram")
+            ig_path      = s_dir / "teaser_ig.mp4"
+            ig_timing    = _render_video(
+                sentences=ig_sentences,
+                topic=topic,
+                orientation="portrait",
+                output_path=ig_path,
+                run_dir=s_dir / "teaser_ig_render",
+                config=self.config,
+                tts=self.tts,
+                subtitle_gen=self.subtitle_gen,
+                music_path=music_path,
+                label=f"{label}_IG",
             )
-
-            # Step 2: YouTube lower third (Subscribe pill near end)
-            tmp2 = str(s_dir / "teaser_lt.mp4")
-            add_lower_third_to_video(
-                input_video=tmp1,
-                output_video=tmp2,
-                logo_path=logo,
-                is_landscape=False,
-                style="youtube",
-            )
-
-            # Replace raw teaser with fully decorated version
-            teaser_path.unlink(missing_ok=True)
-            Path(tmp1).unlink(missing_ok=True)
-            Path(tmp2).rename(teaser_path)
+            hook_end_ig = ig_timing[0]["end"] if ig_timing else 3.0
+            tmp = str(s_dir / "ig_intro.mp4")
+            add_channel_intro(input_video=str(ig_path), output_video=tmp,
+                              logo_path=logo, appear_at_sec=hook_end_ig)
+            tmp2 = str(s_dir / "ig_lt.mp4")
+            add_lower_third_to_video(input_video=tmp, output_video=tmp2,
+                                     logo_path=logo, is_landscape=False, style="youtube")
+            ig_path.unlink(missing_ok=True)
+            Path(tmp).unlink(missing_ok=True)
+            Path(tmp2).rename(ig_path)
 
             # ── FB Complete ────────────────────────────────────────────────────
             fb_sentences = build_short_script(section, style="complete")
@@ -307,7 +318,7 @@ class LongFormPipeline:
             # Captions for this short
             teaser_caps = self.script_gen.generate_all_platform_captions(
                 title=section["title"],
-                sentences=teaser_sentences,
+                sentences=yt_sentences,
                 topic=topic,
             )
             fb_caps = {
@@ -321,9 +332,10 @@ class LongFormPipeline:
 
             short_results.append({
                 "section_title": section["title"],
-                "teaser": str(teaser_path),
-                "fb_complete": str(fb_path),
-                "captions_dir": str(s_dir / "captions"),
+                "teaser_yt":     str(yt_path),
+                "teaser_ig":     str(ig_path),
+                "fb_complete":   str(fb_path),
+                "captions_dir":  str(s_dir / "captions"),
             })
 
         logger.success(f"=== Long-form pipeline done: {run_dir} ===")
