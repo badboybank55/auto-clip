@@ -12,6 +12,27 @@ MAX_RETRY=2
 
 echo "$(date): === Post slot $SLOT started ===" >> $LOG
 
+# Slot 0: ถ้าไม่มี output วันนี้ → รัน pipeline ก่อนอัตโนมัติ
+if [ "$SLOT" = "0" ]; then
+    TODAY=$(date +%Y%m%d)
+    if ! ls output/${TODAY}*_long/long/videos/long.mp4 2>/dev/null | grep -q .; then
+        echo "$(date): ไม่พบ output วันนี้ → รัน pipeline อัตโนมัติ..." >> $LOG
+        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=🔄 ไม่พบคลิปวันนี้ กำลัง generate ใหม่อัตโนมัติ... (โพสช้าประมาณ 1-2 ชั่วโมง)" >> /dev/null 2>&1
+        bash scripts/run_pipeline.sh
+        # ตรวจอีกครั้งหลัง pipeline เสร็จ
+        if ! ls output/${TODAY}*_long/long/videos/long.mp4 2>/dev/null | grep -q .; then
+            echo "$(date): Pipeline ยังพัง ข้าม slot นี้" >> $LOG
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d "chat_id=${TELEGRAM_CHAT_ID}" \
+                -d "text=❌ Pipeline พังซ้ำ โพสวันนี้ไม่ได้ ดู logs/pipeline.log" >> /dev/null 2>&1
+            exit 1
+        fi
+        echo "$(date): Pipeline เสร็จแล้ว ดำเนินการโพสต่อ" >> $LOG
+    fi
+fi
+
 for attempt in $(seq 1 $MAX_RETRY); do
     if python3 post.py --long --slot "$SLOT" >> $LOG 2>&1; then
         echo "$(date): === Slot $SLOT SUCCESS ===" >> $LOG
