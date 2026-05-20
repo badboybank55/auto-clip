@@ -15,12 +15,13 @@ def _cache_key(keyword: str) -> str:
 
 
 def _get_cached_video(keyword: str) -> Optional[str]:
-    """คืน path ของ video ที่ cache ไว้สำหรับ keyword นี้ — หรือ None"""
+    """คืน path ของ video ที่ cache ไว้สำหรับ keyword นี้ — สุ่มเพื่อไม่ให้ซ้ำเดิมทุกครั้ง"""
+    import random
     _PEXELS_CACHE.mkdir(parents=True, exist_ok=True)
     key = _cache_key(keyword)
     hits = [f for f in _PEXELS_CACHE.glob(f"{key}_*.mp4")
             if f.stat().st_size > 700_000]
-    return str(hits[0]) if hits else None
+    return str(random.choice(hits)) if hits else None
 
 
 def _save_to_cache(src: str, keyword: str) -> str:

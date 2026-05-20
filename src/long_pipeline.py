@@ -115,8 +115,31 @@ def _render_video(
     pexels_key = os.getenv("PEXELS_API_KEY", "")
     scene_videos = []
     if pexels_key:
+        import random
         client = PexelsClient(pexels_key)
-        kws = [topic.split()[0], "finance", "money", "investment"]
+        # keyword จาก topic + visual pool หมุนเวียน ไม่ซ้ำเดิมทุกคลิป
+        topic_words = [w for w in topic.split() if len(w) > 3
+                       and w not in {"และ","หรือ","ที่","ใน","กับ","vs","—","ของ","ให้","จาก","ได้","เป็น"}]
+        visual_pool = [
+            "person thinking planning desk",
+            "calculator budget spreadsheet",
+            "graph chart growth data",
+            "hands document pen signing",
+            "phone screen banking app",
+            "office laptop working coffee",
+            "family home lifestyle happy",
+            "market shopping price tag",
+            "coins jar saving piggy bank",
+            "city commute business people",
+            "young adult smiling confident",
+            "couple discussing home table",
+            "wallet cash spending payment",
+            "sunrise nature motivation",
+            "stock market screen numbers",
+            "person reading book learning",
+        ]
+        random.shuffle(visual_pool)
+        kws = topic_words[:2] + visual_pool[:4]
         n = len(timing_data)
         scene_videos = client.fetch_scene_videos(
             keywords=kws, n_scenes=n,
