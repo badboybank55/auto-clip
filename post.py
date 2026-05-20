@@ -521,6 +521,8 @@ def _morning_health_check():
                     f"🤖 Anthropic API มีปัญหา (HTTP {r.status_code})\n"
                     f"   → อาจ rate limit ชั่วคราว รอ 1 ชั่วโมงแล้วลองใหม่"
                 )
+    except Exception:
+        pass
 
     # Anthropic credit balance (ถ้าใกล้หมด)
     try:

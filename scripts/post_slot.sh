@@ -2,6 +2,7 @@
 # Post slot runner — called by LaunchAgent
 SLOT=$1
 cd /Users/badboybank/auto-clip
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 export DYLD_LIBRARY_PATH=/opt/homebrew/lib
 source .venv/bin/activate
 source .env 2>/dev/null || true
